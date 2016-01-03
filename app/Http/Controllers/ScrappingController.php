@@ -180,11 +180,46 @@ class ScrappingController extends Controller
                     {
                         $images[] 	= $image_obj->getAttribute('href');
                     }
-                    // header(s'Content-Type: application/json');
 
-                    $product        = new Product;
-                    $product->title = $name;
-                    $product->price = filter_var($price, FILTER_SANITIZE_NUMBER_INT) / 100;
+                    $sizes          = [];
+                    $sizes_obj      = $page_crawler->filter('#size option');
+                    foreach ($sizes_obj as $key => $size_obj)
+                    {
+                        $size   = html_entity_decode($size_obj->textContent);
+                        if($size !== 'Choose an option…') $sizes[] = $size;
+                    }
+
+                    $colors          = [];
+                    $colors_obj      = $page_crawler->filter('#color option');
+                    foreach ($colors_obj as $key => $color_obj)
+                    {
+                        if($color_obj->textContent !== 'Choose an option…') $colors[] = $color_obj->textContent;
+                    }
+
+
+                    $tags          = [];
+                    $tags_obj      = $page_crawler->filter('.tagged_as a');
+                    foreach ($tags_obj as $key => $tag_obj)
+                    {
+                        $tags[] = $tag_obj->textContent;
+                    }
+
+                    $categories          = [];
+                    $categories_obj      = $page_crawler->filter('.posted_in a');
+                    foreach ($categories_obj as $key => $category_obj)
+                    {
+                        $categories[] = $category_obj->textContent;
+                    }
+
+                    $product            = new Product;
+                    $product->title     = $name;
+                    $product->color     = json_encode($colors);
+                    $product->size      = json_encode($sizes);
+                    $product->tags      = json_encode($tags);
+                    $product->category  = json_encode($categories);
+                    $product->price     = filter_var($price, FILTER_SANITIZE_NUMBER_INT) / 100;
+                    $product->url       = $url_page_link;
+                    
                     $product->save();
 
                     foreach ($images as $key => $image)
